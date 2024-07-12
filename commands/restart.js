@@ -28,7 +28,7 @@ const execute = async (interaction) => {
     if (servers.length > 0) {
       for (const server of servers) {
         const down = spawn("/usr/bin/docker", ["compose", "down", server], {
-          cwd: "/servers",
+          cwd: "/root/servers",
         });
 
         down.stdout.on("data", (data) => {
@@ -43,7 +43,7 @@ const execute = async (interaction) => {
           console.log(`down process exited with code ${code}`);
           if (code === 0) {
             const up = spawn("/usr/bin/docker", ["compose", "up", server], {
-              cwd: "/servers",
+              cwd: "/root/servers",
             });
 
             up.stdout.on("data", (data) => {
