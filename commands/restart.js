@@ -58,13 +58,22 @@ const execute = async (interaction) => {
                 up.stdout.off("data", handleUpData);
               }
             };
+
+            up.stdout.on("data", handleUpData);
+
+            up.on("close", (code) => {
+              if (code !== 0) {
+                interaction.editReply({
+                  content: `Ошибка при запуске сервера ${name}.`,
+                });
+              }
+            });
           } else {
             interaction.editReply({
               content: `Ошибка при остановке сервера ${name}.`,
             });
           }
         });
-        up.stdout.on("data", handleUpData);
       }
     } else {
       interaction.editReply({
