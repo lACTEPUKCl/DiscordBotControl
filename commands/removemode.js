@@ -121,6 +121,7 @@ const buttonInteraction = async (interaction) => {
 
   if (parts[0] === "removeMode") {
     const modeIdToRemove = parts[1];
+    console.log(`ID мода для удаления: ${modeIdToRemove}`);
 
     try {
       let envFileContent = await readFile(envFilePath, "utf8");
@@ -137,8 +138,10 @@ const buttonInteraction = async (interaction) => {
       const customModsMatch = envFileContent.match(customModsRegex);
       let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
+      console.log(`Список модов до удаления: ${customMods}`);
+
       customMods = customMods.filter((id) => id !== modeIdToRemove);
-      console.log(`Обновленный список модов: ${customMods}`);
+      console.log(`Список модов после удаления: ${customMods}`);
 
       const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
