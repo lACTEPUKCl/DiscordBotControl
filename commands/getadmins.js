@@ -10,7 +10,7 @@ config();
 
 const getAdmins = new SlashCommandBuilder()
   .setName("getadmins")
-  .setDescription("Получить список администраторов")
+  .setDescription("Получить список администраторов и камер")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 const execute = async (interaction) => {
@@ -33,43 +33,66 @@ const execute = async (interaction) => {
     const lines = fileContent.split("\n");
 
     let admins = [];
+    let cameras = [];
 
     lines.forEach((line) => {
-      const matches = line.match(/Admin=(\d+):Admin/);
-      if (matches && matches[1]) {
-        admins.push(matches[1]);
+      const adminMatches = line.match(/Admin=(\d+):Admin/);
+      if (adminMatches && adminMatches[1]) {
+        admins.push(adminMatches[1]);
+      }
+      const cameraMatches = line.match(/Admin=(\d+):Camera/);
+      if (cameraMatches && cameraMatches[1]) {
+        cameras.push(cameraMatches[1]);
       }
     });
+
+    const fetchSteamProfiles = async (ids) => {
+      const profiles = [];
+      for (const id of ids) {
+        try {
+          const responseSteam = await fetch(
+            `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steamApi}&steamids=${id}`
+          );
+          const dataSteam = await responseSteam.json();
+          if (
+            dataSteam.response &&
+            dataSteam.response.players &&
+            dataSteam.response.players.length > 0
+          ) {
+            profiles.push({
+              name: dataSteam.response.players[0].personaname,
+              id,
+            });
+          }
+        } catch (error) {
+          console.error(
+            "Ошибка при получении информации о пользователе Steam:",
+            error
+          );
+        }
+      }
+      return profiles;
+    };
+
+    const adminProfiles = await fetchSteamProfiles(admins);
+    const cameraProfiles = await fetchSteamProfiles(cameras);
 
     const embed = new EmbedBuilder()
       .setTitle("Список администраторов")
       .setColor(0x0099ff)
       .setTimestamp();
 
-    let description = "";
-    for (const admin of admins) {
-      try {
-        const responseSteam = await fetch(
-          `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${steamApi}&steamids=${admin}`
-        );
-        const dataSteam = await responseSteam.json();
-        if (
-          dataSteam.response &&
-          dataSteam.response.players &&
-          dataSteam.response.players.length > 0
-        ) {
-          const player = dataSteam.response.players[0];
-          description += `**${player.personaname}**: ${admin}\n`;
-        }
-      } catch (error) {
-        console.error(
-          "Ошибка при получении информации о пользователе Steam:",
-          error
-        );
-      }
-    }
+    let adminDescription = "**Администраторы:**\n";
+    adminProfiles.forEach((admin) => {
+      adminDescription += `**${admin.name}**: ${admin.id}\n`;
+    });
 
-    embed.setDescription(description);
+    let cameraDescription = "\n**Камеры:**\n";
+    cameraProfiles.forEach((camera) => {
+      cameraDescription += `**${camera.name}**: ${camera.id}\n`;
+    });
+
+    embed.setDescription(adminDescription + cameraDescription);
 
     await interaction.editReply({ embeds: [embed], ephemeral: true });
   } catch (error) {
