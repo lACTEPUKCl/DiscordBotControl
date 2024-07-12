@@ -48,7 +48,7 @@ const execute = async (interaction) => {
           if (code === 0) {
             const up = spawn(
               "/usr/bin/docker",
-              ["compose", "--env-file", "up", server],
+              ["compose", "--env-file", "./custom/.env", "up", server],
               {
                 cwd: "/root/servers",
               }
