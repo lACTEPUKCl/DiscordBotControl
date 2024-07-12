@@ -33,9 +33,10 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    } else if (interaction.guildId === process.env.M1E) {
-      customModsKey = "CUSTOM_1_MODS";
-    } else if (interaction.guildId === process.env.RNS) {
+    } else if (
+      interaction.guildId === process.env.M1E ||
+      interaction.guildId === process.env.RNS
+    ) {
       customModsKey = "CUSTOM_1_MODS";
     } else {
       await interaction.editReply({
@@ -130,7 +131,10 @@ const buttonInteraction = async (interaction) => {
       let customModsKey;
       if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
-      } else if (interaction.guildId === process.env.M1E) {
+      } else if (
+        interaction.guildId === process.env.M1E ||
+        interaction.guildId === process.env.RNS
+      ) {
         customModsKey = "CUSTOM_1_MODS";
       }
 
@@ -138,10 +142,12 @@ const buttonInteraction = async (interaction) => {
       const customModsMatch = envFileContent.match(customModsRegex);
       let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
-      console.log(`Список модов до удаления: ${customMods}`);
+      console.log(`Список модов до удаления: ${customMods.join(", ")}`);
 
-      customMods = customMods.filter((id) => id !== modeIdToRemove);
-      console.log(`Список модов после удаления: ${customMods}`);
+      customMods = customMods.filter(
+        (id) => id.toString() !== modeIdToRemove.toString()
+      );
+      console.log(`Список модов после удаления: ${customMods.join(", ")}`);
 
       const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
