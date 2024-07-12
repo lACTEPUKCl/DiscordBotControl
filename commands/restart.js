@@ -36,6 +36,7 @@ const execute = async (interaction) => {
         );
 
         down.on("close", (code) => {
+          console.log("Test1", code);
           if (code === 0) {
             const up = spawn(
               "/usr/bin/docker",
@@ -46,6 +47,7 @@ const execute = async (interaction) => {
             );
 
             up.on("close", (code) => {
+              console.log("Test2", code);
               if (code === 0) {
                 interaction.editReply({
                   content: `Сервер ${name} успешно перезагружен!`,
@@ -56,6 +58,7 @@ const execute = async (interaction) => {
                 });
               }
             });
+            console.log("Test3");
           } else {
             interaction.editReply({
               content: `Ошибка при остановке сервера ${name}.`,
