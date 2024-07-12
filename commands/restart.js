@@ -35,16 +35,7 @@ const execute = async (interaction) => {
           }
         );
 
-        down.stdout.on("data", (data) => {
-          console.log(`down stdout: ${data}`);
-        });
-
-        down.stderr.on("data", (data) => {
-          console.error(`down stderr: ${data}`);
-        });
-
         down.on("close", (code) => {
-          console.log(`down process exited with code ${code}`);
           if (code === 0) {
             const up = spawn(
               "/usr/bin/docker",
@@ -54,16 +45,7 @@ const execute = async (interaction) => {
               }
             );
 
-            up.stdout.on("data", (data) => {
-              console.log(`up stdout: ${data}`);
-            });
-
-            up.stderr.on("data", (data) => {
-              console.error(`up stderr: ${data}`);
-            });
-
             up.on("close", (code) => {
-              console.log(`up process exited with code ${code}`);
               if (code === 0) {
                 interaction.editReply({
                   content: `Сервер ${name} успешно перезагружен!`,
