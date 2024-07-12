@@ -25,8 +25,10 @@ const execute = async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     envFilePath = "/root/servers/custom/.env";
+    console.log(`Чтение файла ${envFilePath}`);
 
     let envFileContent = await readFile(envFilePath, "utf8");
+    console.log(`Содержимое файла: ${envFileContent}`);
 
     let customModsKey;
     if (interaction.guildId === process.env.CIS) {
@@ -122,6 +124,7 @@ const buttonInteraction = async (interaction) => {
 
     try {
       let envFileContent = await readFile(envFilePath, "utf8");
+      console.log(`Чтение файла для удаления мода: ${envFileContent}`);
 
       let customModsKey;
       if (interaction.guildId === process.env.CIS) {
@@ -135,10 +138,12 @@ const buttonInteraction = async (interaction) => {
       let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
       customMods = customMods.filter((id) => id !== modeIdToRemove);
+      console.log(`Обновленный список модов: ${customMods}`);
 
       const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
       envFileContent = envFileContent.replace(customModsRegex, newCustomMods);
+      console.log(`Обновленное содержимое файла: ${envFileContent}`);
 
       await writeFile(envFilePath, envFileContent, "utf8");
 
@@ -148,7 +153,7 @@ const buttonInteraction = async (interaction) => {
         ephemeral: true,
       });
     } catch (error) {
-      console.error("Ошибка при удалении мода");
+      console.error("Ошибка при удалении мода", error);
       await interaction.update({
         content: "Произошла ошибка при удалении мода.",
         components: [],
@@ -173,7 +178,7 @@ const getModInfo = async (modeId) => {
     const data = await response.json();
     return data.response.publishedfiledetails[0];
   } catch (error) {
-    console.error("Ошибка при получении информации о моде");
+    console.error("Ошибка при получении информации о моде", error);
     return null;
   }
 };
