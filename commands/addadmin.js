@@ -44,15 +44,10 @@ const execute = async (interaction) => {
     let filePaths = [];
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS1/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS2/SquadGame/ServerConfig/Admins.cfg",
-      ];
-    } else if (interaction.guildId === process.env.M1E) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/ServerConfig/Admins.cfg",
-      ];
+      filePaths = ["/root/servers/serverscfg/custom-2Admins.cfg"];
+    }
+    if (interaction.guildId === process.env.RNS) {
+      filePaths = ["/root/servers/serverscfg/custom-1/Admins.cfg"];
     }
 
     if (filePaths.length === 0) {
