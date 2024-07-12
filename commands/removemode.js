@@ -122,11 +122,9 @@ const buttonInteraction = async (interaction) => {
 
   if (parts[0] === "removeMode") {
     const modeIdToRemove = parts[1];
-    console.log(`ID мода для удаления: ${modeIdToRemove}`);
 
     try {
       let envFileContent = await readFile(envFilePath, "utf8");
-      console.log(`Чтение файла для удаления мода: ${envFileContent}`);
 
       let customModsKey;
       if (interaction.guildId === process.env.CIS) {
@@ -142,17 +140,13 @@ const buttonInteraction = async (interaction) => {
       const customModsMatch = envFileContent.match(customModsRegex);
       let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
-      console.log(`Список модов до удаления: ${customMods.join(", ")}`);
-
       customMods = customMods.filter(
         (id) => id.toString() !== modeIdToRemove.toString()
       );
-      console.log(`Список модов после удаления: ${customMods.join(", ")}`);
 
       const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
       envFileContent = envFileContent.replace(customModsRegex, newCustomMods);
-      console.log(`Обновленное содержимое файла: ${envFileContent}`);
 
       await writeFile(envFilePath, envFileContent, "utf8");
 
