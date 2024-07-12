@@ -28,6 +28,10 @@ const execute = async (interaction) => {
       filePath = "/root/servers/serverscfg/custom-1/Admins.cfg";
     }
 
+    if (interaction.guildId === process.env.M1E) {
+      filePath = "/root/servers/serverscfg/custom-1/Admins.cfg";
+    }
+
     let fileContent = await readFile(filePath, "utf8");
 
     const lines = fileContent.split("\n");
