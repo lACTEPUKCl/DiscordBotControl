@@ -36,7 +36,6 @@ const execute = async (interaction) => {
         );
 
         down.on("close", (code) => {
-          console.log("Test1", code);
           if (code === 0) {
             const up = spawn(
               "/usr/bin/docker",
@@ -46,19 +45,19 @@ const execute = async (interaction) => {
               }
             );
 
-            up.on("close", (code) => {
-              console.log("Test2", code);
-              if (code === 0) {
+            const handleUpData = (data) => {
+              const message = data.toString();
+
+              if (message.includes("LogEOSSessionListening")) {
+                console.log("Test2", message);
+
                 interaction.editReply({
                   content: `Сервер ${name} успешно перезагружен!`,
                 });
-              } else {
-                interaction.editReply({
-                  content: `Ошибка при запуске сервера ${name}.`,
-                });
+
+                up.stdout.off("data", handleUpData);
               }
-            });
-            console.log("Test3");
+            };
           } else {
             interaction.editReply({
               content: `Ошибка при остановке сервера ${name}.`,
