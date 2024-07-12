@@ -33,6 +33,8 @@ const execute = async (interaction) => {
       customModsKey = "CUSTOM_2_MODS";
     } else if (interaction.guildId === process.env.M1E) {
       customModsKey = "CUSTOM_1_MODS";
+    } else if (interaction.guildId === process.env.RNS) {
+      customModsKey = "CUSTOM_1_MODS";
     } else {
       await interaction.editReply({
         content: "Эта команда не предназначена для данного сервера.",
