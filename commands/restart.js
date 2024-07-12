@@ -27,9 +27,13 @@ const execute = async (interaction) => {
 
     if (servers.length > 0) {
       for (const server of servers) {
-        const down = spawn("/usr/bin/docker", ["compose", "down", server], {
-          cwd: "/root/servers",
-        });
+        const down = spawn(
+          "/usr/bin/docker",
+          ["compose", "--env-file", "./custom/.env", "down", server],
+          {
+            cwd: "/servers",
+          }
+        );
 
         down.stdout.on("data", (data) => {
           console.log(`down stdout: ${data}`);
