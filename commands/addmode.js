@@ -20,7 +20,7 @@ const execute = async (interaction) => {
     const modInfo = await getModInfo(modeid);
     const modName = modInfo.title;
 
-    const envFilePath = "/root/servers/.env";
+    const envFilePath = "/root/servers/custom/.env";
     const envFileContent = await readFile(envFilePath, "utf8");
 
     let customModsKey;
