@@ -46,9 +46,13 @@ const execute = async (interaction) => {
         down.on("close", (code) => {
           console.log(`down process exited with code ${code}`);
           if (code === 0) {
-            const up = spawn("/usr/bin/docker", ["compose", "up", server], {
-              cwd: "/root/servers",
-            });
+            const up = spawn(
+              "/usr/bin/docker",
+              ["compose", "--env-file", "up", server],
+              {
+                cwd: "/root/servers",
+              }
+            );
 
             up.stdout.on("data", (data) => {
               console.log(`up stdout: ${data}`);
