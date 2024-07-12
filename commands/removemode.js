@@ -24,7 +24,7 @@ const execute = async (interaction) => {
 
     await interaction.deferReply({ ephemeral: true });
 
-    envFilePath = "/root/servers/.env";
+    envFilePath = "/root/servers/custom/.env";
 
     let envFileContent = await readFile(envFilePath, "utf8");
 
