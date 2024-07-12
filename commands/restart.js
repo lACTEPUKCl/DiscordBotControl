@@ -31,7 +31,7 @@ const execute = async (interaction) => {
           "/usr/bin/docker",
           ["compose", "--env-file", "./custom/.env", "down", server],
           {
-            cwd: "/servers",
+            cwd: "/root/servers",
           }
         );
 
