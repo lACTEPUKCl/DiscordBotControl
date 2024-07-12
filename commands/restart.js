@@ -49,8 +49,6 @@ const execute = async (interaction) => {
               const message = data.toString();
 
               if (message.includes("LogEOSSessionListening")) {
-                console.log("Test2", message);
-
                 interaction.editReply({
                   content: `Сервер ${name} успешно перезагружен!`,
                 });
