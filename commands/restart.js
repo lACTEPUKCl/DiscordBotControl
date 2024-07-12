@@ -64,6 +64,7 @@ const execute = async (interaction) => {
             });
           }
         });
+        up.stdout.on("data", handleUpData);
       }
     } else {
       interaction.editReply({
