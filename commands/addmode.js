@@ -24,11 +24,12 @@ const execute = async (interaction) => {
     const envFileContent = await readFile(envFilePath, "utf8");
 
     let customModsKey;
-    if (interaction.guildId === process.env.M1E) {
+    if (
+      interaction.guildId === process.env.M1E ||
+      interaction.guildId === process.env.RNS
+    ) {
       customModsKey = "CUSTOM_1_MODS";
     } else if (interaction.guildId === process.env.CIS) {
-      customModsKey = "CUSTOM_2_MODS";
-    } else if (interaction.guildId === process.env.RNS) {
       customModsKey = "CUSTOM_2_MODS";
     } else {
       await interaction.editReply({
