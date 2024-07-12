@@ -1,4 +1,4 @@
-import { readFile, writeFile, rm } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import fetch from "node-fetch";
 import {
   SlashCommandBuilder,
@@ -14,8 +14,7 @@ const removeModeCommand = new SlashCommandBuilder()
   .setDescription("Удалить мод с сервера")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-let filePath;
-let shPath;
+let envFilePath;
 let currentPage = 0;
 let clearPages = false;
 
@@ -25,37 +24,36 @@ const execute = async (interaction) => {
 
     await interaction.deferReply({ ephemeral: true });
 
+    envFilePath = "/root/servers/.env";
+
+    let envFileContent = await readFile(envFilePath, "utf8");
+
+    let customModsKey;
     if (interaction.guildId === process.env.CIS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server2.txt";
+      customModsKey = "CUSTOM_2_MODS";
     } else if (interaction.guildId === process.env.M1E) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server1.txt";
-    } else if (interaction.guildId === process.env.RNS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_rnm_server1.txt";
+      customModsKey = "CUSTOM_1_MODS";
     } else {
       await interaction.editReply({
-        content: "Не удалось определить путь к файлу.",
+        content: "Эта команда не предназначена для данного сервера.",
         ephemeral: true,
       });
       return;
     }
 
-    let fileContent = await readFile(filePath, "utf8");
-    const modeLines = fileContent.match(
-      /workshop_download_item 393380 (\d+) validate\n/g
-    );
+    const customModsRegex = new RegExp(`${customModsKey}=\\(([^)]*)\\)`);
+    const customModsMatch = envFileContent.match(customModsRegex);
+    let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
-    if (!modeLines || modeLines.length === 0) {
+    if (customMods.length === 0) {
       await interaction.editReply({
-        content: "На сервере не установлены моды.",
+        content: `На сервере не установлены моды в ${customModsKey}.`,
         ephemeral: true,
       });
       return;
     }
 
-    const buttons = await generateButtons(modeLines);
+    const buttons = await generateButtons(customMods);
     const row = new ActionRowBuilder().addComponents(buttons);
 
     await interaction.editReply({
@@ -72,18 +70,15 @@ const execute = async (interaction) => {
   }
 };
 
-const generateButtons = async (modeLines) => {
+const generateButtons = async (customMods) => {
   const buttonsPerPage = 3;
-  const totalPages = Math.ceil(modeLines.length / buttonsPerPage);
+  const totalPages = Math.ceil(customMods.length / buttonsPerPage);
 
   const startIndex = currentPage * buttonsPerPage;
-  const endIndex = Math.min(startIndex + buttonsPerPage, modeLines.length);
+  const endIndex = Math.min(startIndex + buttonsPerPage, customMods.length);
 
   const buttons = await Promise.all(
-    modeLines.slice(startIndex, endIndex).map(async (line) => {
-      const modeId = line.match(
-        /workshop_download_item 393380 (\d+) validate\n/
-      )[1];
+    customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
       const modName = modInfo.title;
       return new ButtonBuilder()
@@ -93,7 +88,7 @@ const generateButtons = async (modeLines) => {
     })
   );
 
-  if (totalPages > 1 || endIndex < modeLines.length) {
+  if (totalPages > 1 || endIndex < customMods.length) {
     buttons.push(
       new ButtonBuilder()
         .setCustomId("nextPage")
@@ -115,7 +110,6 @@ const generateButtons = async (modeLines) => {
 };
 
 const buttonInteraction = async (interaction) => {
-  let cpCommandToRemove;
   if (!interaction.isButton()) return;
 
   const customId = interaction.customId;
@@ -124,42 +118,27 @@ const buttonInteraction = async (interaction) => {
   if (parts[0] === "removeMode") {
     const modeIdToRemove = parts[1];
 
-    let modDirectoryPath;
-    if (interaction.guildId === process.env.CIS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server2.txt";
-      cpCommandToRemove = `cp -r /home/kry/ServerFiles/Squad/CUSTOM/cis/steamapps/workshop/content/393380/${modeIdToRemove} /home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/Plugins/Mods\n`;
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_CUSTOM_Server2.sh";
-      modDirectoryPath = `/home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/Plugins/Mods/${modeIdToRemove}`;
-    } else if (interaction.guildId === process.env.M1E) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server1.txt";
-      cpCommandToRemove = `cp -r /home/kry/ServerFiles/Squad/CUSTOM/m1e/steamapps/workshop/content/393380/${modeIdToRemove} /home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/Plugins/Mods\n`;
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_CUSTOM_Server1.sh";
-      modDirectoryPath = `/home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/Plugins/Mods/${modeIdToRemove}`;
-    } else if (interaction.guildId === process.env.RNS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_rnm_server1.txt";
-      cpCommandToRemove = `cp -r /home/kry/ServerFiles/Squad/RNM/Server1/steamapps/workshop/content/393380/${modeIdToRemove} /home/kry/ServerFiles/Squad/RNM/Server1/SquadGame/Plugins/Mods\n`;
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_RNM_Server1.sh";
-      modDirectoryPath = `/home/kry/ServerFiles/Squad/RNM/Server1/SquadGame/Plugins/Mods/${modeIdToRemove}`;
-    }
-
     try {
-      let fileContent = await readFile(filePath, "utf8");
-      const modeLineToRemove = `workshop_download_item 393380 ${modeIdToRemove} validate\n`;
+      let envFileContent = await readFile(envFilePath, "utf8");
 
-      fileContent = fileContent.replace(modeLineToRemove, "");
+      let customModsKey;
+      if (interaction.guildId === process.env.CIS) {
+        customModsKey = "CUSTOM_2_MODS";
+      } else if (interaction.guildId === process.env.M1E) {
+        customModsKey = "CUSTOM_1_MODS";
+      }
 
-      await writeFile(filePath, fileContent, "utf8");
+      const customModsRegex = new RegExp(`${customModsKey}=\\(([^)]*)\\)`);
+      const customModsMatch = envFileContent.match(customModsRegex);
+      let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
-      let shFileContent = await readFile(shPath, "utf8");
+      customMods = customMods.filter((id) => id !== modeIdToRemove);
 
-      shFileContent = shFileContent.replace(cpCommandToRemove, "");
+      const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
-      await writeFile(shPath, shFileContent, "utf8");
+      envFileContent = envFileContent.replace(customModsRegex, newCustomMods);
 
-      await rm(modDirectoryPath, { recursive: true, force: true });
+      await writeFile(envFilePath, envFileContent, "utf8");
 
       await interaction.update({
         content: `Мод с ID ${modeIdToRemove} успешно удален с сервера!`,
@@ -176,10 +155,10 @@ const buttonInteraction = async (interaction) => {
     }
   } else if (parts[0] === "nextPage") {
     currentPage++;
-    await execute(interaction, currentPage, (clearPages = true)); // Передаем текущую страницу в функцию execute
+    await execute(interaction, currentPage, (clearPages = true));
   } else if (parts[0] === "prevPage") {
     currentPage--;
-    await execute(interaction, currentPage, (clearPages = true)); // Передаем текущую страницу в функцию execute
+    await execute(interaction, currentPage, (clearPages = true));
   }
 };
 

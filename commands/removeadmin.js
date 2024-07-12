@@ -31,6 +31,9 @@ const execute = async (interaction) => {
     if (interaction.guildId === process.env.RNS) {
       filePaths = ["/root/servers/serverscfg/custom-1/Admins.cfg"];
     }
+    if (interaction.guildId === process.env.M1E) {
+      filePaths = ["/root/servers/serverscfg/custom-1/Admins.cfg"];
+    }
 
     if (filePaths.length === 0) {
       await interaction.editReply({
