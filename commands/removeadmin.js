@@ -23,7 +23,7 @@ const execute = async (interaction) => {
 
     const steamid64ToRemove = interaction.options.getString("steamid64");
 
-    let filePaths = [];
+    let filePath;
 
     if (interaction.guildId === process.env.CIS) {
       filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
@@ -35,7 +35,7 @@ const execute = async (interaction) => {
       filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
-    if (filePaths.length === 0) {
+    if (!filePath) {
       await interaction.editReply({
         content: "Неизвестный сервер. Удаление администратора не выполнено.",
         ephemeral: true,
@@ -43,19 +43,17 @@ const execute = async (interaction) => {
       return;
     }
 
-    for (const filePath of filePaths) {
-      let fileContent = await readFile(filePath, "utf8");
+    let fileContent = await readFile(filePath, "utf8");
 
-      const lines = fileContent.split("\n");
+    const lines = fileContent.split("\n");
 
-      const filteredLines = lines.filter(
-        (line) => !line.includes(`Admin=${steamid64ToRemove}:`)
-      );
+    const filteredLines = lines.filter(
+      (line) => !line.includes(`Admin=${steamid64ToRemove}:`)
+    );
 
-      const newFileContent = filteredLines.join("\n");
+    const newFileContent = filteredLines.join("\n");
 
-      await writeFile(filePath, newFileContent, "utf8");
-    }
+    await writeFile(filePath, newFileContent, "utf8");
 
     await interaction.editReply({
       content: `Администратор с SteamID64 ${steamid64ToRemove} успешно удален с сервера!`,
