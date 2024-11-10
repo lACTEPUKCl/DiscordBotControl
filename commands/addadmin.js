@@ -41,19 +41,19 @@ const execute = async (interaction) => {
     const steamid64 = interaction.options.getString("steamid64");
     const group = interaction.options.getString("group");
 
-    let filePaths = [];
+    let filePath = "";
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = "/root/servers/serverscfg/custom-2/Admins.cfg";
+      filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
     }
     if (interaction.guildId === process.env.RNS) {
-      filePaths = "/root/servers/serverscfg/ocbt-1/Admins.cfg";
+      filePath = "/root/servers/serverscfg/ocbt-1/Admins.cfg";
     }
     if (interaction.guildId === process.env.M1E) {
-      filePaths = "/root/servers/serverscfg/m1e-1/Admins.cfg";
+      filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
-    if (filePaths.length === 0) {
+    if (!filePath) {
       await interaction.editReply({
         content: "Неизвестный сервер. Добавление администратора не выполнено.",
         ephemeral: true,
@@ -62,21 +62,18 @@ const execute = async (interaction) => {
     }
 
     const newAdminLine = `Admin=${steamid64}:${group}\n`;
+    let fileContent = await readFile(filePath, "utf8");
 
-    for (const filePath of filePaths) {
-      let fileContent = await readFile(filePath, "utf8");
-
-      if (fileContent.includes(newAdminLine)) {
-        await interaction.editReply({
-          content: `Администратор с SteamID64 ${steamid64} и группой ${group} уже существует на сервере!`,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      fileContent += newAdminLine;
-      await writeFile(filePath, fileContent, "utf8");
+    if (fileContent.includes(newAdminLine)) {
+      await interaction.editReply({
+        content: `Администратор с SteamID64 ${steamid64} и группой ${group} уже существует на сервере!`,
+        ephemeral: true,
+      });
+      return;
     }
+
+    fileContent += newAdminLine;
+    await writeFile(filePath, fileContent, "utf8");
 
     await interaction.editReply({
       content: `Админ успешно добавлен на сервер!`,
