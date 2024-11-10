@@ -26,13 +26,13 @@ const execute = async (interaction) => {
     let filePaths = [];
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = ["/root/servers/serverscfg/custom-2/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
     }
     if (interaction.guildId === process.env.RNS) {
-      filePaths = ["/root/servers/serverscfg/ocbt-1/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/ocbt-1/Admins.cfg";
     }
     if (interaction.guildId === process.env.M1E) {
-      filePaths = ["/root/servers/serverscfg/m1e-1/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
     if (filePaths.length === 0) {

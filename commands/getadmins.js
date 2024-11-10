@@ -21,13 +21,13 @@ const execute = async (interaction) => {
     let steamApi = process.env.STEAM_API;
 
     if (interaction.guildId === process.env.CIS) {
-      filePath = ["/root/servers/serverscfg/custom-2/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
     }
     if (interaction.guildId === process.env.RNS) {
-      filePath = ["/root/servers/serverscfg/ocbt-1/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/ocbt-1/Admins.cfg";
     }
     if (interaction.guildId === process.env.M1E) {
-      filePath = ["/root/servers/serverscfg/m1e-1/Admins.cfg"];
+      filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
     let fileContent = await readFile(filePath, "utf8");
