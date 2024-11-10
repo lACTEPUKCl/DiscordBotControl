@@ -44,13 +44,13 @@ const execute = async (interaction) => {
     let filePaths = [];
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = ["/root/servers/serverscfg/custom-2Admins.cfg"];
+      filePaths = ["/root/servers/serverscfg/custom-2/Admins.cfg"];
     }
     if (interaction.guildId === process.env.RNS) {
-      filePaths = ["/root/servers/serverscfg/custom-1/Admins.cfg"];
+      filePaths = ["/root/servers/serverscfg/ocbt-1/Admins.cfg"];
     }
     if (interaction.guildId === process.env.M1E) {
-      filePaths = ["/root/servers/serverscfg/custom-1/Admins.cfg"];
+      filePaths = ["/root/servers/serverscfg/m1e-1/Admins.cfg"];
     }
 
     if (filePaths.length === 0) {
