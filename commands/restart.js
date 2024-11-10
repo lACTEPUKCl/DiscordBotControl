@@ -17,12 +17,12 @@ const execute = async (interaction) => {
     if (interaction.guildId === process.env.CIS) {
       servers = [`custom-2`];
       name = "CIS";
-    } else if (
-      interaction.guildId === process.env.M1E ||
-      interaction.guildId === process.env.RNS
-    ) {
-      servers = [`custom-1`];
+    } else if (interaction.guildId === process.env.M1E) {
+      servers = [`m1e-1`];
       name = "M1E";
+    } else if (interaction.guildId === process.env.RNS) {
+      servers = [`ocbt-1`];
+      name = "RNS";
     }
 
     if (servers.length > 0) {

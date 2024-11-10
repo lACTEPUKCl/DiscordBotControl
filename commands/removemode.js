@@ -31,13 +31,12 @@ const execute = async (interaction) => {
     console.log(`Содержимое файла: ${envFileContent}`);
 
     let customModsKey;
-    if (interaction.guildId === process.env.CIS) {
+    if (interaction.guildId === process.env.M1E) {
+      customModsKey = "M1E_MODS";
+    } else if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    } else if (
-      interaction.guildId === process.env.M1E ||
-      interaction.guildId === process.env.RNS
-    ) {
-      customModsKey = "CUSTOM_1_MODS";
+    } else if (interaction.guildId === process.env.RNS) {
+      customModsKey = "OCBT_MODS";
     } else {
       await interaction.editReply({
         content: "Эта команда не предназначена для данного сервера.",
