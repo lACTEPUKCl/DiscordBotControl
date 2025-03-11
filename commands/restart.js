@@ -6,7 +6,7 @@ config();
 const restartCommand = new SlashCommandBuilder()
   .setName("restart")
   .setDescription("Рестарт сервера")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 let servers = [];
 let name;
 
@@ -17,12 +17,27 @@ const execute = async (interaction) => {
     if (interaction.guildId === process.env.CIS) {
       servers = [`custom-2`];
       name = "CIS";
-    } else if (interaction.guildId === process.env.M1E) {
+    }
+    if (interaction.guildId === process.env.M1E) {
       servers = [`m1e-1`];
       name = "M1E";
-    } else if (interaction.guildId === process.env.RNS) {
-      servers = [`ocbt-1`];
-      name = "RNS";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let folder;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            folder = match[1];
+          }
+        }
+      }
+      servers = [folder];
+      name = [folder];
     }
 
     if (servers.length > 0) {

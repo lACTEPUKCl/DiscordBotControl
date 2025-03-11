@@ -6,7 +6,7 @@ config();
 const addModeCommand = new SlashCommandBuilder()
   .setName("addmode")
   .setDescription("Добавить мод на сервер")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 addModeCommand.addStringOption((option) =>
   option.setName("modeid").setDescription("Введите ID мода").setRequired(true)
@@ -20,16 +20,31 @@ const execute = async (interaction) => {
     const modInfo = await getModInfo(modeid);
     const modName = modInfo.title;
 
-    const envFilePath = "/root/servers/custom/.env";
+    const envFilePath = "/root/servers/.env";
     const envFileContent = await readFile(envFilePath, "utf8");
 
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
-    } else if (interaction.guildId === process.env.CIS) {
+    }
+    if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    } else if (interaction.guildId === process.env.RNS) {
-      customModsKey = "OCBT_MODS";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let roleKey;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            roleKey = match[1];
+          }
+        }
+      }
+      customModsKey = `${roleKey}`;
     } else {
       await interaction.editReply({
         content: "Эта команда не предназначена для данного сервера.",

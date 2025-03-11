@@ -6,7 +6,7 @@ config();
 const removeAdminCommand = new SlashCommandBuilder()
   .setName("removeadmin")
   .setDescription("Удалить администратора")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 removeAdminCommand.addStringOption((option) =>
   option
@@ -29,7 +29,20 @@ const execute = async (interaction) => {
       filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
     }
     if (interaction.guildId === process.env.RNS) {
-      filePath = "/root/servers/serverscfg/ocbt-1/Admins.cfg";
+      const member = interaction.member;
+      let folder;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            folder = match[1];
+          }
+        }
+      }
+      filePath = `/root/servers/serverscfg/${folder}/Admins.cfg`;
     }
     if (interaction.guildId === process.env.M1E) {
       filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";

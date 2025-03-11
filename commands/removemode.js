@@ -12,7 +12,7 @@ config();
 const removeModeCommand = new SlashCommandBuilder()
   .setName("removemode")
   .setDescription("Удалить мод с сервера")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 let envFilePath;
 let currentPage = 0;
@@ -33,10 +33,25 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
-    } else if (interaction.guildId === process.env.CIS) {
+    }
+    if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    } else if (interaction.guildId === process.env.RNS) {
-      customModsKey = "OCBT_MODS";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let roleKey;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            roleKey = match[1];
+          }
+        }
+      }
+      customModsKey = `${roleKey}`;
     } else {
       await interaction.editReply({
         content: "Эта команда не предназначена для данного сервера.",
