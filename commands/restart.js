@@ -46,20 +46,20 @@ const execute = async (interaction) => {
 
     if (server.length > 0) {
       console.log(`Запуск команды: docker compose stop ${server}`);
-      const down = spawn(
+      const stop = spawn(
         "/usr/bin/docker",
         ["compose", "stop", server],
         { cwd: "/root/servers" }
       );
 
-      down.stdout.on("data", (data) => {
-        console.log(`[down stdout]: ${data.toString()}`);
+      stop.stdout.on("data", (data) => {
+        console.log(`[stop stdout]: ${data.toString()}`);
       });
-      down.stderr.on("data", (data) => {
-        console.error(`[down stderr]: ${data.toString()}`);
+      stop.stderr.on("data", (data) => {
+        console.error(`[stop stderr]: ${data.toString()}`);
       });
 
-      down.on("close", (code) => {
+      stop.on("close", (code) => {
         console.log(`Команда down завершилась с кодом ${code}`);
         if (code === 0) {
           console.log(`Запуск команды: docker compose up ${server}`);
