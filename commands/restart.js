@@ -89,7 +89,29 @@ const execute = async (interaction) => {
           });
           up.on("close", (code) => {
             console.log(`Команда up завершилась с кодом ${code}`);
-            if (code !== 0 && !serverStarted) {
+            if (code === 0) {
+              console.log(`Запрос логов сервера ${server}...`);
+              
+              const logs = spawn("/usr/bin/docker", ["logs", "-f", server], {
+                cwd: "/root/servers",
+              });
+
+              logs.stdout.on("data", (data) => {
+                const message = data.toString();
+                console.log(`[logs stdout]: ${message}`);
+
+                if (message.includes("GameSession") || message.includes("LogEOSSessionListening")) {
+                  interaction.editReply({
+                    content: `Сервер ${name} успешно перезагружен!`,
+                  });
+                  logs.kill();
+                }
+              });
+
+              logs.stderr.on("data", (data) => {
+                console.error(`[logs stderr]: ${data.toString()}`);
+              });
+            } else {
               interaction.editReply({
                 content: `Ошибка при запуске сервера ${name}.`,
               });
