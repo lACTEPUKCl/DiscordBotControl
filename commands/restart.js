@@ -25,10 +25,10 @@ const execute = async (interaction) => {
       let folder;
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
-          /\[(.+?)\]/.test(role.name)
+          /(.+?)/.test(role.name)
         );
         if (matchingRole) {
-          const match = matchingRole.name.match(/\[(.+?)\]/);
+          const match = matchingRole.name.match(/(.+?)/);
           if (match && match[1]) {
             folder = match[1].toLowerCase();
           }
@@ -65,25 +65,30 @@ const execute = async (interaction) => {
           console.log(`Запуск команды: docker compose up ${server}`);
           const up = spawn(
             "/usr/bin/docker",
-            ["compose", "up", server],
+            ["compose", "up", "-d", server],
             { cwd: "/root/servers" }
           );
 
-          up.stdout.on("data", (data) => {
+          let serverStarted = false;
+
+          const onData = (data) => {
             const message = data.toString();
-            if (message.includes("GameSession")) {
+            if (!serverStarted && message.includes("GameSession")) {
+              serverStarted = true;
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
               up.stdout.off("data", onData);
             }
-          });
+          };
+
+          up.stdout.on("data", onData);
           up.stderr.on("data", (data) => {
             console.error(`[up stderr]: ${data.toString()}`);
           });
           up.on("close", (code) => {
             console.log(`Команда up завершилась с кодом ${code}`);
-            if (code !== 0) {
+            if (code !== 0 && !serverStarted) {
               interaction.editReply({
                 content: `Ошибка при запуске сервера ${name}.`,
               });
