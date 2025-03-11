@@ -71,8 +71,7 @@ const execute = async (interaction) => {
 
           up.stdout.on("data", (data) => {
             const message = data.toString();
-            console.log(`[up stdout]: ${message}`);
-            if (message.includes("LogEOSSessionListening")) {
+            if (message.includes("GameSession")) {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
