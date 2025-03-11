@@ -36,7 +36,7 @@ const execute = async (interaction) => {
           }
         }
       }
-      server = [folder];
+      server = folder;
       name = folder;
     }
 
