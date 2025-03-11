@@ -36,6 +36,7 @@ const execute = async (interaction) => {
       }
       server = folder;
       name = folder;
+      console.log(folder);
     } else {
       await interaction.editReply({
         content: `Неизвестный сервер. Перезагрузка не выполнена.`,
