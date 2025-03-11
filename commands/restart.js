@@ -25,10 +25,10 @@ const execute = async (interaction) => {
       let folder;
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
-          /(.+?)/.test(role.name)
+          /[(.+?)]/.test(role.name)
         );
         if (matchingRole) {
-          const match = matchingRole.name.match(/[(.+?)]/);
+          const match = matchingRole.name.match(/\[(.+?)\]/);
           if (match && match[1]) {
             folder = match[1].toLowerCase();
           }
