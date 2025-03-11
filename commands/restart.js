@@ -7,30 +7,28 @@ const restartCommand = new SlashCommandBuilder()
   .setName("restart")
   .setDescription("Рестарт сервера")
   .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
-let server = [];
-let name;
+let server = "";
+let name = "";
 
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
     if (interaction.guildId === process.env.CIS) {
-      server = [`custom-2`];
+      server = "custom-2";
       name = "CIS";
-    }
-    if (interaction.guildId === process.env.M1E) {
-      server = [`m1e-1`];
+    } else if (interaction.guildId === process.env.M1E) {
+      server = "m1e-1";
       name = "M1E";
-    }
-    if (interaction.guildId === process.env.RNS) {
+    } else if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
       let folder;
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
-          /\[(.+?)\]/.test(role.name)
+          /(.+?)/.test(role.name)
         );
         if (matchingRole) {
-          const match = matchingRole.name.match(/\[(.+?)\]/);
+          const match = matchingRole.name.match(/[(.+?)]/);
           if (match && match[1]) {
             folder = match[1].toLowerCase();
           }
@@ -38,13 +36,20 @@ const execute = async (interaction) => {
       }
       server = folder;
       name = folder;
+    } else {
+      await interaction.editReply({
+        content: `Неизвестный сервер. Перезагрузка не выполнена.`,
+      });
+      return;
     }
 
     if (server.length > 0) {
       console.log(`Запуск команды: docker compose down ${server}`);
-      const down = spawn("/usr/bin/docker", ["compose", "-f", "docker compose.yml", "--env-file", "./custom/.env", "down", server], {
-        cwd: "/root/servers",
-      });
+      const down = spawn(
+        "/usr/bin/docker",
+        ["compose", "down", server],
+        { cwd: "/root/servers" }
+      );
 
       down.stdout.on("data", (data) => {
         console.log(`[down stdout]: ${data.toString()}`);
@@ -56,12 +61,12 @@ const execute = async (interaction) => {
       down.on("close", (code) => {
         console.log(`Команда down завершилась с кодом ${code}`);
         if (code === 0) {
-          console.log(
-            `Запуск команды: docker compose --env-file ./custom/.env up ${server}`
+          console.log(`Запуск команды: docker compose up ${server}`);
+          const up = spawn(
+            "/usr/bin/docker",
+            ["compose", "up", server],
+            { cwd: "/root/servers" }
           );
-          const up = spawn("/usr/bin/docker", ["compose", "-f", "docker compose.yml", "--env-file", "./custom/.env", "up", server], {
-            cwd: "/root/servers",
-          });
 
           up.stdout.on("data", (data) => {
             const message = data.toString();
