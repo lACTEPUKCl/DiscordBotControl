@@ -36,8 +36,8 @@ const execute = async (interaction) => {
           }
         }
       }
-      servers = [folder];
-      name = [folder];
+      servers = folder;
+      name = folder;
     }
 
     if (servers.length > 0) {
