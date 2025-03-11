@@ -25,7 +25,7 @@ const execute = async (interaction) => {
       let folder;
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
-          /[(.+?)]/.test(role.name)
+          /\[(.+?)\]/.test(role.name)
         );
         if (matchingRole) {
           const match = matchingRole.name.match(/\[(.+?)\]/);
