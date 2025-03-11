@@ -42,7 +42,7 @@ const execute = async (interaction) => {
 
     if (server.length > 0) {
       console.log(`Запуск команды: docker compose down ${server}`);
-      const down = spawn("/usr/bin/docker", ["compose", "down", server], {
+      const down = spawn("/usr/bin/docker", ["compose", "--env-file", "./custom/.env", "down", server], {
         cwd: "/root/servers",
       });
 
@@ -59,7 +59,7 @@ const execute = async (interaction) => {
           console.log(
             `Запуск команды: docker compose --env-file ./custom/.env up ${server}`
           );
-          const up = spawn("/usr/bin/docker", ["compose", "up", server], {
+          const up = spawn("/usr/bin/docker", ["compose", "--env-file", "./custom/.env", "up", server], {
             cwd: "/root/servers",
           });
 
