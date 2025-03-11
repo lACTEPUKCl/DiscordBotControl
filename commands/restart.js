@@ -75,7 +75,7 @@ const execute = async (interaction) => {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
-              up.stdout.off("data");
+              up.stdout.off("data", onData);
             }
           });
           up.stderr.on("data", (data) => {
