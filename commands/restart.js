@@ -92,7 +92,7 @@ const execute = async (interaction) => {
             if (code === 0) {
               console.log(`Запрос логов сервера ${server}...`);
               
-              const logs = spawn("/usr/bin/docker", ["logs", "-f", server], {
+              const logs = spawn("/usr/bin/docker", ["compose", "logs", "-f", server], {
                 cwd: "/root/servers",
               });
 
