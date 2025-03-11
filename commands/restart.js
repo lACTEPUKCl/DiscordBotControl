@@ -73,6 +73,7 @@ const execute = async (interaction) => {
 
           const onData = (data) => {
             const message = data.toString();
+            console.log(message);
             if (!serverStarted && message.includes("GameSession")) {
               serverStarted = true;
               interaction.editReply({
