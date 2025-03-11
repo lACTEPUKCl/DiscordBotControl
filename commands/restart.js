@@ -45,10 +45,10 @@ const execute = async (interaction) => {
     }
 
     if (server.length > 0) {
-      console.log(`Запуск команды: docker compose down ${server}`);
+      console.log(`Запуск команды: docker compose stop ${server}`);
       const down = spawn(
         "/usr/bin/docker",
-        ["compose", "down", server],
+        ["compose", "stop", server],
         { cwd: "/root/servers" }
       );
 
