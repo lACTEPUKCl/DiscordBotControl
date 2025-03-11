@@ -33,7 +33,7 @@ const execute = async (interaction) => {
         if (matchingRole) {
           const match = matchingRole.name.match(/\[(.+?)\]/);
           if (match && match[1]) {
-            folder = match[1];
+            folder = match[1].toLowerCase();
           }
         }
       }

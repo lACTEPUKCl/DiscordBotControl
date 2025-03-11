@@ -48,7 +48,7 @@ const execute = async (interaction) => {
     }
     if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
-      let roleFolder = "default";
+      let roleFolder;
 
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
@@ -57,7 +57,7 @@ const execute = async (interaction) => {
         if (matchingRole) {
           const match = matchingRole.name.match(/\[(.+?)\]/);
           if (match && match[1]) {
-            roleFolder = match[1];
+            roleFolder = match[1].toLowerCase();
           }
         }
       }
