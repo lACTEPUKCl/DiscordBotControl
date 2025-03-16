@@ -7,20 +7,22 @@ const restartCommand = new SlashCommandBuilder()
   .setName("restart")
   .setDescription("Рестарт сервера")
   .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
-let server = "";
-let name = "";
+let server = [];
+let name;
 
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
     if (interaction.guildId === process.env.CIS) {
-      server = "custom-2";
+      server = [`custom-2`];
       name = "CIS";
-    } else if (interaction.guildId === process.env.M1E) {
-      server = "m1e-1";
+    }
+    if (interaction.guildId === process.env.M1E) {
+      server = [`m1e-1`];
       name = "M1E";
-    } else if (interaction.guildId === process.env.RNS) {
+    }
+    if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
       let folder;
       if (member.roles && member.roles.cache) {
@@ -36,84 +38,33 @@ const execute = async (interaction) => {
       }
       server = folder;
       name = folder;
-      console.log(folder);
-    } else {
-      await interaction.editReply({
-        content: `Неизвестный сервер. Перезагрузка не выполнена.`,
-      });
-      return;
     }
 
     if (server.length > 0) {
-
-      console.log(`Запуск команды: docker compose stop ${server}`);
-      const stop = spawn(
-        "/usr/bin/docker",
-        ["compose", "stop", server],
-        { cwd: "/root/servers" }
-      );
-
-      stop.stdout.on("data", (data) => {
-        console.log(`[stop stdout]: ${data.toString()}`);
-      });
-      stop.stderr.on("data", (data) => {
-        console.error(`[stop stderr]: ${data.toString()}`);
+      const down = spawn("/usr/bin/docker", ["compose", "down", server], {
+        cwd: "/root/servers",
       });
 
-      stop.on("close", (code) => {
-        console.log(`Команда down завершилась с кодом ${code}`);
+      down.on("close", (code) => {
         if (code === 0) {
-          console.log(`Запуск команды: docker compose up ${server}`);
-          const up = spawn(
-            "/usr/bin/docker",
-            ["compose", "up", "-d", server],
-            { cwd: "/root/servers" }
-          );
+          const up = spawn("/usr/bin/docker", ["compose", "up", server], {
+            cwd: "/root/servers",
+          });
 
-          let serverStarted = false;
-
-          const onData = (data) => {
+          up.stdout.on("data", (data) => {
             const message = data.toString();
-
-            if (!serverStarted && message.includes("GameSession")) {
-              serverStarted = true;
+            if (message.includes("LogEOSSessionListening")) {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
-              up.stdout.off("data", onData);
+              up.stdout.off("data");
             }
-          };
-
-          up.stdout.on("data", onData);
+          });
           up.stderr.on("data", (data) => {
             console.error(`[up stderr]: ${data.toString()}`);
           });
           up.on("close", (code) => {
-
-            if (code === 0) {
-              console.log(`Запрос логов сервера ${server}...`);
-              
-              const logs = spawn("/usr/bin/docker", ["compose", "logs", "-f", server], {
-                cwd: "/root/servers",
-              });
-
-              logs.stdout.on("data", (data) => {
-                const message = data.toString();
-                console.log(`[logs stdout]: ${message}`);
-
-                if (message.includes("GameSession") || message.includes("LogEOSSessionListening")) {
-                  interaction.editReply({
-                    content: `Сервер ${name} успешно перезагружен!`,
-                  });
-                  logs.kill();
-                }
-              });
-
-              logs.stderr.on("data", (data) => {
-                console.error(`[logs stderr]: ${data.toString()}`);
-              });
-            } else {
-
+            if (code !== 0) {
               interaction.editReply({
                 content: `Ошибка при запуске сервера ${name}.`,
               });
