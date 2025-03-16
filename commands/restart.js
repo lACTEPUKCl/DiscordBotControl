@@ -41,31 +41,18 @@ const execute = async (interaction) => {
     }
 
     if (server.length > 0) {
-      console.log(`Запуск команды: docker compose down ${server}`);
       const down = spawn("/usr/bin/docker", ["compose", "down", server], {
         cwd: "/root/servers",
       });
 
-      down.stdout.on("data", (data) => {
-        console.log(`[down stdout]: ${data.toString()}`);
-      });
-      down.stderr.on("data", (data) => {
-        console.error(`[down stderr]: ${data.toString()}`);
-      });
-
       down.on("close", (code) => {
-        console.log(`Команда down завершилась с кодом ${code}`);
         if (code === 0) {
-          console.log(
-            `Запуск команды: docker compose --env-file ./custom/.env up ${server}`
-          );
           const up = spawn("/usr/bin/docker", ["compose", "up", server], {
             cwd: "/root/servers",
           });
 
           up.stdout.on("data", (data) => {
             const message = data.toString();
-            console.log(`[up stdout]: ${message}`);
             if (message.includes("LogEOSSessionListening")) {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
@@ -77,7 +64,6 @@ const execute = async (interaction) => {
             console.error(`[up stderr]: ${data.toString()}`);
           });
           up.on("close", (code) => {
-            console.log(`Команда up завершилась с кодом ${code}`);
             if (code !== 0) {
               interaction.editReply({
                 content: `Ошибка при запуске сервера ${name}.`,
