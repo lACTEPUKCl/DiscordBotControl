@@ -25,10 +25,8 @@ const execute = async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     envFilePath = "/root/servers/.env";
-    console.log(`Чтение файла ${envFilePath}`);
 
     let envFileContent = await readFile(envFilePath, "utf8");
-    console.log(`Содержимое файла: ${envFileContent}`);
 
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
