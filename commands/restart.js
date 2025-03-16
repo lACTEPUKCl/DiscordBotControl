@@ -45,6 +45,7 @@ const execute = async (interaction) => {
     }
 
     if (server.length > 0) {
+
       console.log(`Запуск команды: docker compose stop ${server}`);
       const stop = spawn(
         "/usr/bin/docker",
@@ -73,7 +74,7 @@ const execute = async (interaction) => {
 
           const onData = (data) => {
             const message = data.toString();
-            console.log(message);
+
             if (!serverStarted && message.includes("GameSession")) {
               serverStarted = true;
               interaction.editReply({
@@ -88,7 +89,7 @@ const execute = async (interaction) => {
             console.error(`[up stderr]: ${data.toString()}`);
           });
           up.on("close", (code) => {
-            console.log(`Команда up завершилась с кодом ${code}`);
+
             if (code === 0) {
               console.log(`Запрос логов сервера ${server}...`);
               
@@ -112,6 +113,7 @@ const execute = async (interaction) => {
                 console.error(`[logs stderr]: ${data.toString()}`);
               });
             } else {
+
               interaction.editReply({
                 content: `Ошибка при запуске сервера ${name}.`,
               });

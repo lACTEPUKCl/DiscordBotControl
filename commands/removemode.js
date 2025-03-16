@@ -143,11 +143,28 @@ const buttonInteraction = async (interaction) => {
       let customModsKey;
       if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
-      } else if (
-        interaction.guildId === process.env.M1E ||
-        interaction.guildId === process.env.RNS
-      ) {
-        customModsKey = "CUSTOM_1_MODS";
+      }
+      if (interaction.guildId === process.env.RNS) {
+        const member = interaction.member;
+        let roleKey;
+        if (member.roles && member.roles.cache) {
+          const matchingRole = member.roles.cache.find((role) =>
+            /\[(.+?)\]/.test(role.name)
+          );
+          if (matchingRole) {
+            const match = matchingRole.name.match(/\[(.+?)\]/);
+            if (match && match[1]) {
+              roleKey = match[1];
+            }
+          }
+        }
+        customModsKey = `${roleKey}`;
+      } else {
+        await interaction.editReply({
+          content: "Эта команда не предназначена для данного сервера.",
+          ephemeral: true,
+        });
+        return;
       }
 
       const customModsRegex = new RegExp(`${customModsKey}=\\(([^)]*)\\)`);
