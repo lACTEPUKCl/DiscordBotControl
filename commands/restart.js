@@ -1,44 +1,80 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { config } from "dotenv";
-import { exec } from "child_process";
+import { spawn } from "child_process";
 config();
 
 const restartCommand = new SlashCommandBuilder()
   .setName("restart")
   .setDescription("Рестарт сервера")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
+let server = [];
+let name;
 
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
-    let servers = [];
-
     if (interaction.guildId === process.env.CIS) {
-      servers = [
-        `Squad_CUSTOM_Server2`,
-        `Squad_CUSTOM_Server3`,
-        `Squad_CUSTOM_Server4`,
-      ];
-    } else if (interaction.guildId === process.env.M1E) {
-      servers = [`Squad_CUSTOM_Server1`];
+      server = [`custom-2`];
+      name = "CIS";
+    }
+    if (interaction.guildId === process.env.M1E) {
+      server = [`m1e-1`];
+      name = "M1E";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let folder;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            folder = match[1].toLowerCase();
+          }
+        }
+      }
+      server = folder;
+      name = folder;
     }
 
-    if (servers.length > 0) {
-      for (const server of servers) {
-        exec(`sudo systemctl restart ${server}.service`, (error) => {
-          if (error) {
-            console.error(`Ошибка при перезагрузке сервера ${server}`, error);
-            interaction.editReply({
-              content: `Произошла ошибка при перезагрузке сервера ${server}.`,
-            });
-            return;
-          }
-        });
-      }
+    if (server.length > 0) {
+      const down = spawn("/usr/bin/docker", ["compose", "down", server], {
+        cwd: "/root/servers",
+      });
 
-      interaction.editReply({
-        content: `Серверы успешно перезагружены!`,
+      down.on("close", (code) => {
+        if (code === 0) {
+          const up = spawn("/usr/bin/docker", ["compose", "up", server], {
+            cwd: "/root/servers",
+          });
+
+          up.stdout.on("data", (data) => {
+            const message = data.toString();
+            if (message.includes("LogEOSSessionListening")) {
+              interaction.editReply({
+                content: `Сервер ${name} успешно перезагружен!`,
+              });
+              up.stdout.off("data");
+            }
+          });
+          up.stderr.on("data", (data) => {
+            console.error(`[up stderr]: ${data.toString()}`);
+          });
+          up.on("close", (code) => {
+            if (code !== 0) {
+              interaction.editReply({
+                content: `Ошибка при запуске сервера ${name}.`,
+              });
+            }
+          });
+        } else {
+          interaction.editReply({
+            content: `Ошибка при остановке сервера ${name}.`,
+          });
+        }
       });
     } else {
       interaction.editReply({
