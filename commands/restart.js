@@ -16,6 +16,7 @@ const execute = async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     if (interaction.guildId === process.env.CIS) {
+
       server = "custom-2";
       name = "CIS";
     } else if (interaction.guildId === process.env.M1E) {
@@ -24,6 +25,7 @@ const execute = async (interaction) => {
     } else if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
       let folder = "";
+      
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
           /\[(.+?)\]/.test(role.name)
@@ -40,6 +42,7 @@ const execute = async (interaction) => {
     }
 
     if (server && server.length > 0) {
+
       const down = spawn("/usr/bin/docker", ["compose", "down", server], {
         cwd: "/root/servers",
       });
@@ -56,6 +59,7 @@ const execute = async (interaction) => {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
+
               up.stdout.removeListener("data", onData);
             }
           };
