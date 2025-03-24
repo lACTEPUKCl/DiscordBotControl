@@ -21,6 +21,7 @@ let clearPages = false;
 const execute = async (interaction) => {
   try {
     if (!clearPages) currentPage = 0;
+
     await interaction.deferReply({ ephemeral: true });
 
     envFilePath = "/root/servers/.env";
@@ -90,16 +91,17 @@ const execute = async (interaction) => {
 const generateButtons = async (customMods) => {
   const buttonsPerPage = 3;
   const totalPages = Math.ceil(customMods.length / buttonsPerPage);
+
   const startIndex = currentPage * buttonsPerPage;
   const endIndex = Math.min(startIndex + buttonsPerPage, customMods.length);
 
   const buttons = await Promise.all(
     customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
-      const modName = modInfo?.title || modeId;
+      const modName = modInfo.title;
       return new ButtonBuilder()
         .setCustomId(`removeMode_${modeId}`)
-        .setLabel(`Удалить мод ${modName}`)
+        .setLabel(`Удалить мод ${modName || modeId}`)
         .setStyle("Danger");
     })
   );
@@ -127,11 +129,13 @@ const generateButtons = async (customMods) => {
 
 const buttonInteraction = async (interaction) => {
   if (!interaction.isButton()) return;
+
   const customId = interaction.customId;
   const parts = customId.split("_");
 
   if (parts[0] === "removeMode") {
     const modeIdToRemove = parts[1];
+
     try {
       let envFileContent = await readFile(envFilePath, "utf8");
 
@@ -185,7 +189,6 @@ const buttonInteraction = async (interaction) => {
       });
     } catch (error) {
       console.error("Ошибка при удалении мода", error);
-
       await interaction.update({
         content: "Произошла ошибка при удалении мода.",
         components: [],
@@ -195,13 +198,10 @@ const buttonInteraction = async (interaction) => {
   } else if (parts[0] === "nextPage") {
     currentPage++;
 
-    clearPages = true;
-    await execute(interaction);
+    await execute(interaction, currentPage, (clearPages = true));
   } else if (parts[0] === "prevPage") {
     currentPage--;
-    clearPages = true;
-    await execute(interaction);
-
+    await execute(interaction, currentPage, (clearPages = true));
   }
 };
 
@@ -212,13 +212,7 @@ const getModInfo = async (modeId) => {
   try {
     const response = await fetch(url);
     const data = await response.json();
-    const details = data?.response?.publishedfiledetails?.[0];
-
-    if (!details || details.result !== 1) {
-      console.warn(`Не удалось получить данные о моде: ${modeId}`);
-      return null;
-    }
-    return details;
+    return data.response.publishedfiledetails[0];
   } catch (error) {
     console.error("Ошибка при получении информации о моде", error);
     return null;
