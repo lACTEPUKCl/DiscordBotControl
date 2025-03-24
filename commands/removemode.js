@@ -22,7 +22,7 @@ const execute = async (interaction) => {
   try {
     if (!clearPages) currentPage = 0;
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     envFilePath = "/root/servers/.env";
 
@@ -31,11 +31,9 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
-    }
-    if (interaction.guildId === process.env.CIS) {
+    } else if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    }
-    if (interaction.guildId === process.env.RNS) {
+    } else if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
       let roleKey;
       if (member.roles && member.roles.cache) {
@@ -49,11 +47,11 @@ const execute = async (interaction) => {
           }
         }
       }
-      customModsKey = `${roleKey}`;
+      customModsKey = roleKey;
     } else {
       await interaction.editReply({
         content: "Эта команда не предназначена для данного сервера.",
-        ephemeral: true,
+        flags: 64,
       });
       return;
     }
@@ -65,7 +63,7 @@ const execute = async (interaction) => {
     if (customMods.length === 0) {
       await interaction.editReply({
         content: `На сервере не установлены моды в ${customModsKey}.`,
-        ephemeral: true,
+        flags: 64,
       });
       return;
     }
@@ -76,13 +74,13 @@ const execute = async (interaction) => {
     await interaction.editReply({
       content: "Выберите мод, который вы хотите удалить:",
       components: [row],
-      ephemeral: true,
+      flags: 64,
     });
   } catch (error) {
     console.error("Ошибка при выполнении команды", error);
     await interaction.editReply({
       content: "Произошла ошибка.",
-      ephemeral: true,
+      flags: 64,
     });
   }
 };
@@ -94,21 +92,26 @@ const generateButtons = async (customMods) => {
   const startIndex = currentPage * buttonsPerPage;
   const endIndex = Math.min(startIndex + buttonsPerPage, customMods.length);
 
+  const MAX_LABEL_LENGTH = 80;
+  const prefix = "";
+  const availableLength = MAX_LABEL_LENGTH - prefix.length;
+
   const buttons = await Promise.all(
     customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
       console.log(modInfo);
 
-      let modName = modInfo.title || modeId;
-      if (modName.length > 50) {
-        modName = modName.slice(0, 50) + "...";
+      let modName = modInfo && modInfo.title ? modInfo.title : modeId;
+      if (modName.length > availableLength) {
+        modName = modName.slice(0, availableLength - 3) + "...";
       }
       return new ButtonBuilder()
         .setCustomId(`removeMode_${modeId}`)
-        .setLabel(`${modName}`)
+        .setLabel(prefix + modName)
         .setStyle("Danger");
     })
   );
+
   if (totalPages > 1 || endIndex < customMods.length) {
     buttons.push(
       new ButtonBuilder()
@@ -143,11 +146,11 @@ const buttonInteraction = async (interaction) => {
       let envFileContent = await readFile(envFilePath, "utf8");
 
       let customModsKey;
-
-      if (interaction.guildId === process.env.CIS) {
+      if (interaction.guildId === process.env.M1E) {
+        customModsKey = "M1E_MODS";
+      } else if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
-      }
-      if (interaction.guildId === process.env.RNS) {
+      } else if (interaction.guildId === process.env.RNS) {
         const member = interaction.member;
         let roleKey;
         if (member.roles && member.roles.cache) {
@@ -161,11 +164,11 @@ const buttonInteraction = async (interaction) => {
             }
           }
         }
-        customModsKey = `${roleKey}`;
+        customModsKey = roleKey;
       } else {
         await interaction.editReply({
           content: "Эта команда не предназначена для данного сервера.",
-          ephemeral: true,
+          flags: 64,
         });
         return;
       }
@@ -187,23 +190,24 @@ const buttonInteraction = async (interaction) => {
       await interaction.update({
         content: `Мод с ID ${modeIdToRemove} успешно удален с сервера!`,
         components: [],
-        ephemeral: true,
+        flags: 64,
       });
     } catch (error) {
       console.error("Ошибка при удалении мода", error);
       await interaction.update({
         content: "Произошла ошибка при удалении мода.",
         components: [],
-        ephemeral: true,
+        flags: 64,
       });
     }
   } else if (parts[0] === "nextPage") {
     currentPage++;
-
-    await execute(interaction, currentPage, (clearPages = true));
+    clearPages = true;
+    await execute(interaction);
   } else if (parts[0] === "prevPage") {
     currentPage--;
-    await execute(interaction, currentPage, (clearPages = true));
+    clearPages = true;
+    await execute(interaction);
   }
 };
 
@@ -214,7 +218,16 @@ const getModInfo = async (modeId) => {
   try {
     const response = await fetch(url);
     const data = await response.json();
-    return data.response.publishedfiledetails[0];
+    if (
+      data.response &&
+      Array.isArray(data.response.publishedfiledetails) &&
+      data.response.publishedfiledetails.length > 0
+    ) {
+      return data.response.publishedfiledetails[0];
+    } else {
+      console.error("Нет данных о моде для modeId:", modeId);
+      return null;
+    }
   } catch (error) {
     console.error("Ошибка при получении информации о моде", error);
     return null;
