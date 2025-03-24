@@ -31,7 +31,6 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
-
     }
     if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
@@ -98,14 +97,16 @@ const generateButtons = async (customMods) => {
   const buttons = await Promise.all(
     customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
-      const modName = modInfo.title;
+      let modName = modInfo.title || modeId;
+      if (modName.length > 50) {
+        modName = modName.slice(0, 50) + "...";
+      }
       return new ButtonBuilder()
         .setCustomId(`removeMode_${modeId}`)
-        .setLabel(`Удалить мод ${modName || modeId}`)
+        .setLabel(`${modName}`)
         .setStyle("Danger");
     })
   );
-
   if (totalPages > 1 || endIndex < customMods.length) {
     buttons.push(
       new ButtonBuilder()
@@ -145,7 +146,6 @@ const buttonInteraction = async (interaction) => {
         customModsKey = "CUSTOM_2_MODS";
       }
       if (interaction.guildId === process.env.RNS) {
-
         const member = interaction.member;
         let roleKey;
         if (member.roles && member.roles.cache) {
