@@ -55,7 +55,9 @@ const execute = async (interaction) => {
 
     const customModsRegex = new RegExp(`${customModsKey}=\\(([^)]*)\\)`);
     const customModsMatch = envFileContent.match(customModsRegex);
-    let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
+    let customMods = customModsMatch
+      ? customModsMatch[1].split(" ").filter(Boolean)
+      : [];
 
     if (customMods.includes(modeid)) {
       await interaction.editReply({
