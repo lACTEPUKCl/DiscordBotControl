@@ -178,6 +178,7 @@ const buttonInteraction = async (interaction) => {
       });
     } catch (error) {
       console.error("Ошибка при удалении мода", error);
+
       await interaction.update({
         content: "Произошла ошибка при удалении мода.",
         components: [],
