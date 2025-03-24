@@ -22,15 +22,20 @@ const execute = async (interaction) => {
   try {
     if (!clearPages) currentPage = 0;
     await interaction.deferReply({ ephemeral: true });
+
     envFilePath = "/root/servers/.env";
+
     let envFileContent = await readFile(envFilePath, "utf8");
 
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
-    } else if (interaction.guildId === process.env.CIS) {
+
+    }
+    if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
-    } else if (interaction.guildId === process.env.RNS) {
+    }
+    if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
       let roleKey;
       if (member.roles && member.roles.cache) {
@@ -131,11 +136,12 @@ const buttonInteraction = async (interaction) => {
       let envFileContent = await readFile(envFilePath, "utf8");
 
       let customModsKey;
-      if (interaction.guildId === process.env.M1E) {
-        customModsKey = "M1E_MODS";
-      } else if (interaction.guildId === process.env.CIS) {
+
+      if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
-      } else if (interaction.guildId === process.env.RNS) {
+      }
+      if (interaction.guildId === process.env.RNS) {
+
         const member = interaction.member;
         let roleKey;
         if (member.roles && member.roles.cache) {
@@ -167,6 +173,7 @@ const buttonInteraction = async (interaction) => {
       );
 
       const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
+
       envFileContent = envFileContent.replace(customModsRegex, newCustomMods);
 
       await writeFile(envFilePath, envFileContent, "utf8");
@@ -187,12 +194,14 @@ const buttonInteraction = async (interaction) => {
     }
   } else if (parts[0] === "nextPage") {
     currentPage++;
+
     clearPages = true;
     await execute(interaction);
   } else if (parts[0] === "prevPage") {
     currentPage--;
     clearPages = true;
     await execute(interaction);
+
   }
 };
 

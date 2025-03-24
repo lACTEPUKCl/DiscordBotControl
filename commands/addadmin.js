@@ -6,7 +6,7 @@ config();
 const addAdminCommand = new SlashCommandBuilder()
   .setName("addadmin")
   .setDescription("Добавить администратора")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 addAdminCommand.addStringOption((option) =>
   option
@@ -41,21 +41,33 @@ const execute = async (interaction) => {
     const steamid64 = interaction.options.getString("steamid64");
     const group = interaction.options.getString("group");
 
-    let filePaths = [];
+    let filePath = "";
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS1/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS2/SquadGame/ServerConfig/Admins.cfg",
-      ];
-    } else if (interaction.guildId === process.env.M1E) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/ServerConfig/Admins.cfg",
-      ];
+      filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let roleFolder;
+
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            roleFolder = match[1].toLowerCase();
+          }
+        }
+      }
+      filePath = `/root/servers/serverscfg/${roleFolder}/Admins.cfg`;
+    }
+    if (interaction.guildId === process.env.M1E) {
+      filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
-    if (filePaths.length === 0) {
+    if (!filePath) {
       await interaction.editReply({
         content: "Неизвестный сервер. Добавление администратора не выполнено.",
         ephemeral: true,
@@ -64,21 +76,18 @@ const execute = async (interaction) => {
     }
 
     const newAdminLine = `Admin=${steamid64}:${group}\n`;
+    let fileContent = await readFile(filePath, "utf8");
 
-    for (const filePath of filePaths) {
-      let fileContent = await readFile(filePath, "utf8");
-
-      if (fileContent.includes(newAdminLine)) {
-        await interaction.editReply({
-          content: `Администратор с SteamID64 ${steamid64} и группой ${group} уже существует на сервере!`,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      fileContent += newAdminLine;
-      await writeFile(filePath, fileContent, "utf8");
+    if (fileContent.includes(newAdminLine)) {
+      await interaction.editReply({
+        content: `Администратор с SteamID64 ${steamid64} и группой ${group} уже существует на сервере!`,
+        ephemeral: true,
+      });
+      return;
     }
+
+    fileContent += newAdminLine;
+    await writeFile(filePath, fileContent, "utf8");
 
     await interaction.editReply({
       content: `Админ успешно добавлен на сервер!`,
