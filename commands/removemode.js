@@ -21,7 +21,6 @@ let clearPages = false;
 const execute = async (interaction) => {
   try {
     if (!clearPages) currentPage = 0;
-
     await interaction.deferReply({ ephemeral: true });
 
     envFilePath = "/root/servers/.env";
@@ -31,6 +30,7 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
+
     }
     if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
@@ -90,17 +90,16 @@ const execute = async (interaction) => {
 const generateButtons = async (customMods) => {
   const buttonsPerPage = 3;
   const totalPages = Math.ceil(customMods.length / buttonsPerPage);
-
   const startIndex = currentPage * buttonsPerPage;
   const endIndex = Math.min(startIndex + buttonsPerPage, customMods.length);
 
   const buttons = await Promise.all(
     customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
-      const modName = modInfo.title;
+      const modName = modInfo?.title || modeId;
       return new ButtonBuilder()
         .setCustomId(`removeMode_${modeId}`)
-        .setLabel(`Удалить мод ${modName || modeId}`)
+        .setLabel(`Удалить мод ${modName}`)
         .setStyle("Danger");
     })
   );
@@ -128,21 +127,21 @@ const generateButtons = async (customMods) => {
 
 const buttonInteraction = async (interaction) => {
   if (!interaction.isButton()) return;
-
   const customId = interaction.customId;
   const parts = customId.split("_");
 
   if (parts[0] === "removeMode") {
     const modeIdToRemove = parts[1];
-
     try {
       let envFileContent = await readFile(envFilePath, "utf8");
 
       let customModsKey;
+
       if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
       }
       if (interaction.guildId === process.env.RNS) {
+
         const member = interaction.member;
         let roleKey;
         if (member.roles && member.roles.cache) {
@@ -186,6 +185,7 @@ const buttonInteraction = async (interaction) => {
       });
     } catch (error) {
       console.error("Ошибка при удалении мода", error);
+
       await interaction.update({
         content: "Произошла ошибка при удалении мода.",
         components: [],
@@ -194,10 +194,14 @@ const buttonInteraction = async (interaction) => {
     }
   } else if (parts[0] === "nextPage") {
     currentPage++;
-    await execute(interaction, currentPage, (clearPages = true));
+
+    clearPages = true;
+    await execute(interaction);
   } else if (parts[0] === "prevPage") {
     currentPage--;
-    await execute(interaction, currentPage, (clearPages = true));
+    clearPages = true;
+    await execute(interaction);
+
   }
 };
 
@@ -208,7 +212,13 @@ const getModInfo = async (modeId) => {
   try {
     const response = await fetch(url);
     const data = await response.json();
-    return data.response.publishedfiledetails[0];
+    const details = data?.response?.publishedfiledetails?.[0];
+
+    if (!details || details.result !== 1) {
+      console.warn(`Не удалось получить данные о моде: ${modeId}`);
+      return null;
+    }
+    return details;
   } catch (error) {
     console.error("Ошибка при получении информации о моде", error);
     return null;
