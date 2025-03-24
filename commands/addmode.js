@@ -6,7 +6,7 @@ config();
 const addModeCommand = new SlashCommandBuilder()
   .setName("addmode")
   .setDescription("Добавить мод на сервер")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 addModeCommand.addStringOption((option) =>
   option.setName("modeid").setDescription("Введите ID мода").setRequired(true)
@@ -16,72 +16,67 @@ const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
-    const modeid = await interaction.options.getString("modeid");
+    const modeid = interaction.options.getString("modeid");
     const modInfo = await getModInfo(modeid);
     const modName = modInfo.title;
-    let filePath;
-    let shPath;
-    let cpCommand;
 
-    if (interaction.guildId === process.env.CIS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server2.txt";
+    const envFilePath = "/root/servers/.env";
+    const envFileContent = await readFile(envFilePath, "utf8");
 
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_CUSTOM_Server2.sh";
-
-      cpCommand = `cp -r /home/kry/ServerFiles/Squad/CUSTOM/cis/steamapps/workshop/content/393380/${modeid} /home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/Plugins/Mods\n`;
-    }
-
+    let customModsKey;
     if (interaction.guildId === process.env.M1E) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_custom_server1.txt";
-
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_CUSTOM_Server1.sh";
-
-      cpCommand = `cp -r /home/kry/ServerFiles/Squad/CUSTOM/m1e/steamapps/workshop/content/393380/${modeid} /home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/Plugins/Mods\n`;
+      customModsKey = "M1E_MODS";
     }
-
+    if (interaction.guildId === process.env.CIS) {
+      customModsKey = "CUSTOM_2_MODS";
+    }
     if (interaction.guildId === process.env.RNS) {
-      filePath =
-        "/home/kry/UpdateServerScripts/SQUAD/update_squad_rnm_server1.txt";
-
-      shPath = "/home/kry/UpdateServerScripts/SQUAD/Squad_RNM_Server1.sh";
-
-      cpCommand = `cp -r /home/kry/ServerFiles/Squad/RNM/Server1/steamapps/workshop/content/393380/${modeid} /home/kry/ServerFiles/Squad/RNM/Server1/SquadGame/Plugins/Mods\n`;
-    }
-
-    let fileContent = await readFile(filePath, "utf8");
-
-    if (
-      fileContent.includes(`workshop_download_item 393380 ${modeid} validate`)
-    ) {
+      const member = interaction.member;
+      let roleKey;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            roleKey = match[1];
+          }
+        }
+      }
+      customModsKey = `${roleKey}`;
+    } else {
       await interaction.editReply({
-        content: `Мод ${modName} уже добавлен на сервер.`,
+        content: "Эта команда не предназначена для данного сервера.",
         ephemeral: true,
       });
       return;
     }
 
-    const newLine = `workshop_download_item 393380 ${modeid} validate\n`;
+    const customModsRegex = new RegExp(`${customModsKey}=\\(([^)]*)\\)`);
+    const customModsMatch = envFileContent.match(customModsRegex);
+    let customMods = customModsMatch ? customModsMatch[1].split(" ") : [];
 
-    const appUpdateIndex = fileContent.indexOf("app_update 403240 validate");
-    const insertIndex = fileContent.indexOf("\n", appUpdateIndex) + 1;
+    if (customMods.includes(modeid)) {
+      await interaction.editReply({
+        content: `Мод ${modName} уже добавлен в ${customModsKey}.`,
+        ephemeral: true,
+      });
+      return;
+    }
 
-    fileContent =
-      fileContent.slice(0, insertIndex) +
-      newLine +
-      fileContent.slice(insertIndex);
+    customMods.push(modeid);
+    const newCustomMods = `${customModsKey}=(${customMods.join(" ")})`;
 
-    await writeFile(filePath, fileContent, "utf8");
+    const updatedEnvFileContent = envFileContent.replace(
+      customModsRegex,
+      newCustomMods
+    );
 
-    let customServerContent = await readFile(shPath, "utf8");
-
-    customServerContent += cpCommand;
-
-    await writeFile(shPath, customServerContent, "utf8");
+    await writeFile(envFilePath, updatedEnvFileContent, "utf8");
 
     await interaction.editReply({
-      content: `Мод ${modName} успешно добавлен на сервер!`,
+      content: `Мод ${modName} успешно добавлен в ${customModsKey}!`,
       ephemeral: true,
     });
   } catch (error) {

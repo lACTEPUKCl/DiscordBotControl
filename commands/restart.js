@@ -7,24 +7,25 @@ const restartCommand = new SlashCommandBuilder()
   .setName("restart")
   .setDescription("Рестарт сервера")
   .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
-let server = [];
-let name;
+
+let server = "";
+let name = "";
 
 const execute = async (interaction) => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
     if (interaction.guildId === process.env.CIS) {
-      server = [`custom-2`];
+
+      server = "custom-2";
       name = "CIS";
-    }
-    if (interaction.guildId === process.env.M1E) {
-      server = [`m1e-1`];
+    } else if (interaction.guildId === process.env.M1E) {
+      server = "m1e-1";
       name = "M1E";
-    }
-    if (interaction.guildId === process.env.RNS) {
+    } else if (interaction.guildId === process.env.RNS) {
       const member = interaction.member;
-      let folder;
+      let folder = "";
+      
       if (member.roles && member.roles.cache) {
         const matchingRole = member.roles.cache.find((role) =>
           /\[(.+?)\]/.test(role.name)
@@ -40,7 +41,8 @@ const execute = async (interaction) => {
       name = folder;
     }
 
-    if (server.length > 0) {
+    if (server && server.length > 0) {
+
       const down = spawn("/usr/bin/docker", ["compose", "down", server], {
         cwd: "/root/servers",
       });
@@ -51,18 +53,23 @@ const execute = async (interaction) => {
             cwd: "/root/servers",
           });
 
-          up.stdout.on("data", (data) => {
+          const onData = (data) => {
             const message = data.toString();
             if (message.includes("LogEOSSessionListening")) {
               interaction.editReply({
                 content: `Сервер ${name} успешно перезагружен!`,
               });
-              up.stdout.off("data");
+
+              up.stdout.removeListener("data", onData);
             }
-          });
+          };
+
+          up.stdout.on("data", onData);
+
           up.stderr.on("data", (data) => {
             console.error(`[up stderr]: ${data.toString()}`);
           });
+
           up.on("close", (code) => {
             if (code !== 0) {
               interaction.editReply({

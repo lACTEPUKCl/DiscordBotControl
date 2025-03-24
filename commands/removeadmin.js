@@ -6,7 +6,7 @@ config();
 const removeAdminCommand = new SlashCommandBuilder()
   .setName("removeadmin")
   .setDescription("Удалить администратора")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.SendTTSMessages);
 
 removeAdminCommand.addStringOption((option) =>
   option
@@ -23,21 +23,32 @@ const execute = async (interaction) => {
 
     const steamid64ToRemove = interaction.options.getString("steamid64");
 
-    let filePaths = [];
+    let filePath;
 
     if (interaction.guildId === process.env.CIS) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/cis/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS1/SquadGame/ServerConfig/Admins.cfg",
-        "/home/kry/ServerFiles/Squad/CUSTOM/RNS2/SquadGame/ServerConfig/Admins.cfg",
-      ];
-    } else if (interaction.guildId === process.env.M1E) {
-      filePaths = [
-        "/home/kry/ServerFiles/Squad/CUSTOM/m1e/SquadGame/ServerConfig/Admins.cfg",
-      ];
+      filePath = "/root/servers/serverscfg/custom-2/Admins.cfg";
+    }
+    if (interaction.guildId === process.env.RNS) {
+      const member = interaction.member;
+      let folder;
+      if (member.roles && member.roles.cache) {
+        const matchingRole = member.roles.cache.find((role) =>
+          /\[(.+?)\]/.test(role.name)
+        );
+        if (matchingRole) {
+          const match = matchingRole.name.match(/\[(.+?)\]/);
+          if (match && match[1]) {
+            folder = match[1].toLowerCase();
+          }
+        }
+      }
+      filePath = `/root/servers/serverscfg/${folder}/Admins.cfg`;
+    }
+    if (interaction.guildId === process.env.M1E) {
+      filePath = "/root/servers/serverscfg/m1e-1/Admins.cfg";
     }
 
-    if (filePaths.length === 0) {
+    if (!filePath) {
       await interaction.editReply({
         content: "Неизвестный сервер. Удаление администратора не выполнено.",
         ephemeral: true,
@@ -45,19 +56,17 @@ const execute = async (interaction) => {
       return;
     }
 
-    for (const filePath of filePaths) {
-      let fileContent = await readFile(filePath, "utf8");
+    let fileContent = await readFile(filePath, "utf8");
 
-      const lines = fileContent.split("\n");
+    const lines = fileContent.split("\n");
 
-      const filteredLines = lines.filter(
-        (line) => !line.includes(`Admin=${steamid64ToRemove}:`)
-      );
+    const filteredLines = lines.filter(
+      (line) => !line.includes(`Admin=${steamid64ToRemove}:`)
+    );
 
-      const newFileContent = filteredLines.join("\n");
+    const newFileContent = filteredLines.join("\n");
 
-      await writeFile(filePath, newFileContent, "utf8");
-    }
+    await writeFile(filePath, newFileContent, "utf8");
 
     await interaction.editReply({
       content: `Администратор с SteamID64 ${steamid64ToRemove} успешно удален с сервера!`,

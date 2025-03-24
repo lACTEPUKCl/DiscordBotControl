@@ -31,6 +31,7 @@ const execute = async (interaction) => {
     let customModsKey;
     if (interaction.guildId === process.env.M1E) {
       customModsKey = "M1E_MODS";
+
     }
     if (interaction.guildId === process.env.CIS) {
       customModsKey = "CUSTOM_2_MODS";
@@ -139,10 +140,12 @@ const buttonInteraction = async (interaction) => {
       let envFileContent = await readFile(envFilePath, "utf8");
 
       let customModsKey;
+
       if (interaction.guildId === process.env.CIS) {
         customModsKey = "CUSTOM_2_MODS";
       }
       if (interaction.guildId === process.env.RNS) {
+
         const member = interaction.member;
         let roleKey;
         if (member.roles && member.roles.cache) {
@@ -194,6 +197,7 @@ const buttonInteraction = async (interaction) => {
     }
   } else if (parts[0] === "nextPage") {
     currentPage++;
+
     await execute(interaction, currentPage, (clearPages = true));
   } else if (parts[0] === "prevPage") {
     currentPage--;
