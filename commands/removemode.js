@@ -97,6 +97,8 @@ const generateButtons = async (customMods) => {
   const buttons = await Promise.all(
     customMods.slice(startIndex, endIndex).map(async (modeId) => {
       const modInfo = await getModInfo(modeId);
+      console.log(modInfo);
+
       let modName = modInfo.title || modeId;
       if (modName.length > 50) {
         modName = modName.slice(0, 50) + "...";
