@@ -1,6 +1,19 @@
 import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
 import getCommands from "./commands/getCommands.js";
 import removeMode from "./commands/removemode.js";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
+const proxyUrl = process.env.DISCORD_PROXY_URL;
+let wsProxyAgent = null;
+
+if (proxyUrl) {
+  console.log("[BOT] Using Discord proxy:", proxyUrl);
+
+  const restProxy = new ProxyAgent(proxyUrl);
+  setGlobalDispatcher(restProxy);
+
+  wsProxyAgent = new HttpsProxyAgent(proxyUrl);
+}
 
 const client = new Client({
   intents: [
@@ -9,6 +22,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
   ],
+  ...(wsProxyAgent ? { ws: { agent: wsProxyAgent } } : {}),
 });
 
 client.commands = new Collection();
