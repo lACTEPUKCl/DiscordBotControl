@@ -3,8 +3,10 @@
   "dependencies": {
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
+    "https-proxy-agent": "^7.0.6",
     "node-fetch": "^3.3.2",
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.21",
+    "undici": "^5.29.0"
   },
   "scripts": {
     "start": "nodemon index.js"
